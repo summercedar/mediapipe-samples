@@ -2,16 +2,14 @@ name: Build CameraComposition IPA
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # 支持手动点击运行
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-14 # Github云端Mac虚拟机
+    runs-on: macos-14
     steps:
-    - name: Checkout code
+    - name: Checkout full repo
       uses: actions/checkout@v4
-      with:
-        sparse-checkout: examples/camera_composition/ios
 
     - name: Setup Ruby & CocoaPods
       uses: ruby/setup-ruby@v1
@@ -34,7 +32,7 @@ jobs:
     - name: Export unsigned IPA
       working-directory: ./examples/camera_composition/ios
       run: |
-        cat > exportOptions.plist <<EOF
+        cat > exportOptions.plist <<'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
