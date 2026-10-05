@@ -1,0 +1,60 @@
+name: Build CameraComposition IPA
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # 支持手动点击运行
+
+jobs:
+  build:
+    runs-on: macos-14 # Github云端Mac虚拟机
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: examples/camera_composition/ios
+
+    - name: Setup Ruby & CocoaPods
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+
+    - name: Install Pods
+      working-directory: ./examples/camera_composition/ios
+      run: pod install
+
+    - name: Archive Xcode project
+      working-directory: ./examples/camera_composition/ios
+      run: |
+        xcodebuild -workspace CameraComposition.xcworkspace \
+        -scheme CameraComposition \
+        -archivePath ./build/CameraComposition.xcarchive \
+        archive -destination generic/platform=iOS
+
+    - name: Export unsigned IPA
+      working-directory: ./examples/camera_composition/ios
+      run: |
+        cat > exportOptions.plist <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>development</string>
+    <key>signingStyle</key>
+    <string>manual</string>
+    <key>signingCertificate</key>
+    <string>none</string>
+</dict>
+</plist>
+EOF
+        xcodebuild -exportArchive \
+          -archivePath ./build/CameraComposition.xcarchive \
+          -exportPath ./output \
+          -exportOptionsPlist ./exportOptions.plist
+
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CameraComposition-IPA
+        path: examples/camera_composition/ios/output/*.ipa
