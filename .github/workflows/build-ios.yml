@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-13
     steps:
     - name: Checkout full repo
       uses: actions/checkout@v4
@@ -19,7 +19,9 @@ jobs:
 
     - name: Install Pods
       working-directory: ./examples/camera_composition/ios
-      run: pod install
+      run: |
+        gem sources --add https://gems.ruby-china.com/ --remove https://rubygems.org/
+        pod install --repo-update
 
     - name: Archive Xcode project
       working-directory: ./examples/camera_composition/ios
